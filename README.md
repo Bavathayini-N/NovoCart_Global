@@ -10,7 +10,7 @@ The project implements a medallion architecture (Bronze → Silver → Gold) to 
 
 ### Data Pipeline Layers
 
-```
+
 Bronze Layer (Raw Data)
     ↓
 Silver Layer (Cleaned & Transformed)
@@ -18,7 +18,22 @@ Silver Layer (Cleaned & Transformed)
 Gold Layer (Business Logic & Analytics)
     ↓
 KPI and Dashboard (Visualizations)
-```
+
+
+#### Bronze Layer
+- **Purpose**: Ingests raw sales, product, and customer data from source systems.
+- **Characteristics**: Contains unprocessed, original data with minimal validation.
+
+
+#### Silver Layer
+- **Purpose**: Cleans, validates, and transforms raw data for analytics.
+- **Characteristics**: Removes duplicates, standardizes formats, enriches with reference data.
+- **Outputs**: Cleaned sales, product, and customer tables ready for business logic.
+
+#### Gold Layer
+- **Purpose**: Applies business logic, aggregates metrics, and prepares data for reporting.
+- **Characteristics**: Contains curated tables for KPIs, dashboards, and data cubes.
+- **Outputs**: Fact and dimension tables, KPI calculations, multi-dimensional analytics.
 
 ### Technology Stack
 - **Platform**: Databricks
@@ -28,7 +43,7 @@ KPI and Dashboard (Visualizations)
 
 ## 📁 Project Structure
 
-```
+
 NovoCart_Global/
 ├── bronze/          # Raw data ingestion notebooks
 ├── silver/          # Data cleaning and transformation
@@ -36,7 +51,7 @@ NovoCart_Global/
 │   ├── nb_gold     # Gold layer transformations
 │   └── nb_gold_kpi # KPI calculations and data cube
 └── README.md       # This file
-```
+
 
 ## 🗄️ Data Model
 
