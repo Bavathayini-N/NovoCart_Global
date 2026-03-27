@@ -1,0 +1,915 @@
+{
+  "datasets": [
+    {
+      "name": "5a37324c",
+      "displayName": "Total Revenue",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(line_total_usd) AS total_revenue\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales"
+      ]
+    },
+    {
+      "name": "039adc56",
+      "displayName": "Completed Order Count",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(DISTINCT order_id) AS completed_order_count\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales\n",
+        "WHERE\n",
+        "  order_status = 'completed'"
+      ]
+    },
+    {
+      "name": "81fcd5e1",
+      "displayName": "Completed Order Rate",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(DISTINCT\n",
+        "    CASE\n",
+        "      WHEN order_status = 'completed' THEN order_id\n",
+        "    END\n",
+        "  )\n",
+        "    * 1.0\n",
+        "    / COUNT(DISTINCT order_id) AS completed_order_rate\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales"
+      ]
+    },
+    {
+      "name": "ced0cd0d",
+      "displayName": "Average Order Value",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(line_total_usd) / COUNT(DISTINCT order_id) AS avg_order_value\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales"
+      ]
+    },
+    {
+      "name": "134f3f01",
+      "displayName": "Active Customers Count",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(DISTINCT c.customer_id) AS active_customers_count\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales f\n",
+        "    JOIN novocart_global.novocart_gold.dim_customer c\n",
+        "      ON f.customer_key = c.customer_key\n",
+        "WHERE\n",
+        "  c.customer_id != 'UNKNOWN'"
+      ]
+    },
+    {
+      "name": "ed7e4399",
+      "displayName": "Data Quality Score",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(DISTINCT\n",
+        "    CASE\n",
+        "      WHEN c.customer_id != 'UNKNOWN' THEN f.order_item_id\n",
+        "    END\n",
+        "  )\n",
+        "    * 1.0\n",
+        "    / COUNT(*) AS data_quality_score\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales f\n",
+        "    JOIN novocart_global.novocart_gold.dim_customer c\n",
+        "      ON f.customer_key = c.customer_key"
+      ]
+    },
+    {
+      "name": "439b49ed",
+      "displayName": "Revenue by Country",
+      "queryLines": [
+        "SELECT\n",
+        "  c.country_code,\n",
+        "  SUM(f.line_total_usd) AS revenue\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales f\n",
+        "    JOIN novocart_global.novocart_gold.dim_country c\n",
+        "      ON f.country_key = c.country_key\n",
+        "GROUP BY\n",
+        "  c.country_code"
+      ]
+    },
+    {
+      "name": "26d8ad81",
+      "displayName": "Revenue by Channel",
+      "queryLines": [
+        "SELECT\n",
+        "  ch.channel,\n",
+        "  SUM(f.line_total_usd) AS revenue\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales f\n",
+        "    JOIN novocart_global.novocart_gold.dim_channel ch\n",
+        "      ON f.channel_key = ch.channel_key\n",
+        "GROUP BY\n",
+        "  ch.channel"
+      ]
+    },
+    {
+      "name": "88bfd73f",
+      "displayName": "Top 5 Products by Revenue",
+      "queryLines": [
+        "SELECT\n",
+        "  p.product_id,\n",
+        "  p.product_name,\n",
+        "  SUM(f.line_total_usd) AS revenue\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales f\n",
+        "    JOIN novocart_global.novocart_gold.dim_product p\n",
+        "      ON f.product_key = p.product_key\n",
+        "GROUP BY\n",
+        "  p.product_id,\n",
+        "  p.product_name\n",
+        "ORDER BY\n",
+        "  revenue DESC\n",
+        "LIMIT 5"
+      ]
+    },
+    {
+      "name": "18702f0d",
+      "displayName": "Customer Acquisition by Month",
+      "queryLines": [
+        "SELECT\n",
+        "  YEAR(registration_date) AS year,\n",
+        "  MONTH(registration_date) AS month,\n",
+        "  COUNT(*) AS customer_count\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.dim_customer\n",
+        "GROUP BY\n",
+        "  YEAR(registration_date),\n",
+        "  MONTH(registration_date)\n",
+        "ORDER BY\n",
+        "  year,\n",
+        "  month"
+      ]
+    },
+    {
+      "name": "3403f88f",
+      "displayName": "Data Cube",
+      "queryLines": [
+        "SELECT\n",
+        "  c.country_code,\n",
+        "  ch.channel,\n",
+        "  p.product_id,\n",
+        "  p.product_name,\n",
+        "  YEAR(f.order_date) AS year,\n",
+        "  MONTH(f.order_date) AS month,\n",
+        "  SUM(f.line_total_usd) AS total_revenue,\n",
+        "  COUNT(f.order_id) AS order_count,\n",
+        "  AVG(f.line_total_usd) AS avg_order_value,\n",
+        "  COUNT(DISTINCT cust.customer_id) AS active_customers_count\n",
+        "FROM\n",
+        "  novocart_global.novocart_gold.fact_sales f\n",
+        "    JOIN novocart_global.novocart_gold.dim_country c\n",
+        "      ON f.country_key = c.country_key\n",
+        "    JOIN novocart_global.novocart_gold.dim_channel ch\n",
+        "      ON f.channel_key = ch.channel_key\n",
+        "    JOIN novocart_global.novocart_gold.dim_product p\n",
+        "      ON f.product_key = p.product_key\n",
+        "    JOIN novocart_global.novocart_gold.dim_customer cust\n",
+        "      ON f.customer_key = cust.customer_key\n",
+        "GROUP BY\n",
+        "  c.country_code,\n",
+        "  ch.channel,\n",
+        "  p.product_id,\n",
+        "  p.product_name,\n",
+        "  YEAR(f.order_date),\n",
+        "  MONTH(f.order_date)"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "46362757",
+      "displayName": "NovoCart GLobal",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "5a37324c",
+                  "fields": [
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Revenue",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Revenue"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "completed_orders",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "039adc56",
+                  "fields": [
+                    {
+                      "name": "completed_order_count",
+                      "expression": "`completed_order_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Completed Orders",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "completed_order_count",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "none"
+                  },
+                  "displayName": "Completed Orders"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "completion_rate",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "81fcd5e1",
+                  "fields": [
+                    {
+                      "name": "completed_order_rate",
+                      "expression": "`completed_order_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Order Completion Rate",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "completed_order_rate",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "displayName": "Completion Rate"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "avg_order_value",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ced0cd0d",
+                  "fields": [
+                    {
+                      "name": "avg_order_value",
+                      "expression": "`avg_order_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Average Order Value",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_order_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "AOV"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 4,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "active_customers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "134f3f01",
+                  "fields": [
+                    {
+                      "name": "active_customers_count",
+                      "expression": "`active_customers_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Active Customers",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "active_customers_count",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "none"
+                  },
+                  "displayName": "Active Customers"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "data_quality",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ed7e4399",
+                  "fields": [
+                    {
+                      "name": "data_quality_score",
+                      "expression": "`data_quality_score`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Data Quality Score",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "data_quality_score",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "displayName": "Quality Score"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 4,
+            "width": 4,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_country",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "439b49ed",
+                  "fields": [
+                    {
+                      "name": "country_code",
+                      "expression": "`country_code`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Revenue by Country",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "country_code",
+                  "displayName": "Country",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "country_code",
+                  "legend": {
+                    "position": "bottom"
+                  },
+                  "displayName": "Country",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "revenue_channel",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "26d8ad81",
+                  "fields": [
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    },
+                    {
+                      "name": "channel",
+                      "expression": "`channel`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Revenue by Channel",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Revenue"
+                },
+                "color": {
+                  "fieldName": "channel",
+                  "legend": {
+                    "position": "right"
+                  },
+                  "displayName": "Channel",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 8,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "top_products",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "88bfd73f",
+                  "fields": [
+                    {
+                      "name": "product_name",
+                      "expression": "`product_name`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Top 5 Products by Revenue",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "product_name",
+                  "displayName": "Product",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "product_name",
+                  "legend": {
+                    "hide": true
+                  },
+                  "displayName": "Product",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "customer_acquisition",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "18702f0d",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "sum(customer_count)",
+                      "expression": "SUM(`customer_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Customer Acquisition by Month",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "month",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(customer_count)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "none"
+                  },
+                  "displayName": "New Customers",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 14,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "data_cube",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3403f88f",
+                  "fields": [
+                    {
+                      "name": "country_code",
+                      "expression": "`country_code`"
+                    },
+                    {
+                      "name": "channel",
+                      "expression": "`channel`"
+                    },
+                    {
+                      "name": "product_id",
+                      "expression": "`product_id`"
+                    },
+                    {
+                      "name": "product_name",
+                      "expression": "`product_name`"
+                    },
+                    {
+                      "name": "year",
+                      "expression": "`year`"
+                    },
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    },
+                    {
+                      "name": "order_count",
+                      "expression": "`order_count`"
+                    },
+                    {
+                      "name": "avg_order_value",
+                      "expression": "`avg_order_value`"
+                    },
+                    {
+                      "name": "active_customers_count",
+                      "expression": "`active_customers_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Data Cube - Multi-dimensional Analysis",
+                "showTitle": true
+              },
+              "rowsPerPage": 25,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "country_code",
+                    "displayName": "Country"
+                  },
+                  {
+                    "fieldName": "channel",
+                    "displayName": "Channel"
+                  },
+                  {
+                    "fieldName": "product_id",
+                    "displayName": "Product ID"
+                  },
+                  {
+                    "fieldName": "product_name",
+                    "displayName": "Product Name"
+                  },
+                  {
+                    "fieldName": "year",
+                    "displayName": "Year"
+                  },
+                  {
+                    "fieldName": "month",
+                    "displayName": "Month"
+                  },
+                  {
+                    "fieldName": "total_revenue",
+                    "displayName": "Total Revenue"
+                  },
+                  {
+                    "fieldName": "order_count",
+                    "displayName": "Order Count"
+                  },
+                  {
+                    "fieldName": "avg_order_value",
+                    "displayName": "Avg Order Value"
+                  },
+                  {
+                    "fieldName": "active_customers_count",
+                    "displayName": "Active Customers"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 20,
+            "width": 12,
+            "height": 8
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "e12de7ee",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "0d332026",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
