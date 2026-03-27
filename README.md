@@ -71,8 +71,6 @@ NovoCart_Global/
 
 ### 1. Total Revenue
 **Metric**: Sum of all sales revenue in USD  
-**Value**: $1,078,200.46  
-**Query**: `SELECT SUM(line_total_usd) FROM fact_sales`
 
 ### 2. Revenue by Country
 **Metric**: Sales breakdown by geographic region  
@@ -86,17 +84,14 @@ NovoCart_Global/
 
 ### 4. Completed Order Count
 **Metric**: Number of successfully completed orders  
-**Value**: 519 orders  
 **Filter**: `order_status = 'completed'`
 
 ### 5. Completed Order Rate
 **Metric**: Percentage of orders that reach completion  
-**Value**: 64.9%  
 **Formula**: (Completed Orders / Total Orders) × 100
 
 ### 6. Average Order Value (AOV)
 **Metric**: Mean revenue per order  
-**Value**: $1,347.75  
 **Formula**: Total Revenue / Total Orders
 
 ### 7. Top 5 Products by Revenue
@@ -105,9 +100,7 @@ NovoCart_Global/
 **Includes**: Product ID, name, and total revenue
 
 ### 8. Active Customers Count
-**Metric**: Unique customers excluding unknown/invalid records  
-**Value**: 395 customers  
-**Filter**: Excludes customers with ID = 'UNKNOWN'
+**Metric**: Unique customers excluding unknown/invalid records    
 
 ### 9. Customer Acquisition by Month
 **Metric**: Monthly customer registration trends  
@@ -116,7 +109,7 @@ NovoCart_Global/
 
 ### 10. Data Quality Score
 **Metric**: Percentage of valid customer records in sales data  
-**Value**: 100%  
+**Value**: 0.98  
 **Formula**: (Valid Records / Total Records) × 100
 
 ## 🎯 Data Cube
